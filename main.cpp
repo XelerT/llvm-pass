@@ -9,8 +9,9 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Support/SourceMgr.h"
-#include "llvm/Transforms/Scalar/DCE.h"
+#include "llvm/Transforms/Utils/Mem2Reg.h"
 
 #include "ai_passes.hpp"
 #include "dce.hpp"
@@ -37,7 +38,7 @@ int main (int argc, const char** argv)
         llvm::FunctionAnalysisManager FAM;
 
         FPM.addPass(AIZeroProp());
-        FPM.addPass(AIMem2Reg());
+        FPM.addPass(llvm::PromotePass());
         FPM.addPass(my_llvm::dce_pass_t());
         
         PB.registerFunctionAnalyses(FAM);

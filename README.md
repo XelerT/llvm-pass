@@ -1,41 +1,30 @@
-# Sber Syntax
+# Sber LLVM Pass
 
 ### About
 
-This is second task at Sber Compilers additional semester class. Flex is used to get stream of tokens. My program visualizes syntax analyzation.
+This is the third task at Sber Compilers additional semester class: Implementation of dead code elimination pass. Zero propagation and memory to register transformations are made before DCE pass.
 
 
 ### Requirements
 
 - Cmake version  3.13.4
-- Flex
-
+- LLVM
 
 ### Install & Build
         $ git clone https://github.com/XelerT/Sber-LLVM.git
         $ cd Sber-LLVM/
         $ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
+
 ### Run
+
+You need to generate llvm IR file and then feed it to stasyan:
+
         $ cd build/
-        $ ./stasyan input_file.txt
+        $ ./stasyan input_file.ll
 
-### Code example
+### Example of input file
 
-
-        Size_t size = 1;
-
-        Int64_t start_position = 10;
-        Int64_t mid_position   = 10;
-        Int64_t end_position   = 10;
-
-        True  bool = true;
-        False bool = false;
-
-        iF 10 tHeN print 42;
-
-        String string = "String with string";
-        String newline = "Devided by \n newline.\n";
-
-        -- one line comment
-
-        /* MY string with s1mb0|s\n /*/**/aaa/*aaa*/*/ */
+        define dso_local i32 @sub(i32 noundef %0, i32 noundef %1) { 
+                %3 = mul i32 %0, 0
+                ret i32 %3
+        }

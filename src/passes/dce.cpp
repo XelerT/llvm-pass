@@ -1,4 +1,5 @@
 #include <set>
+#include <iostream>
 #include  "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/Pass.h"
@@ -47,6 +48,7 @@ bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &
 
         while (!next2delete.empty()) {
                 auto it = next2delete.end();
+                it--;
                 auto instr = *it;
                 next2delete.erase(it);
                 changed |= delete_instruction(instr, next2delete, info);
