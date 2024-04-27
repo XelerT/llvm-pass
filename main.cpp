@@ -62,7 +62,7 @@ int main (int argc, const char** argv)
 
   FPM.addPass(AIZeroProp());
   FPM.addPass(AIMem2Reg());
-  FPM.addPass(my_llvm::dce_pass());
+  FPM.addPass(my_llvm::dce_pass_t());
   
   PB.registerFunctionAnalyses(FAM);
 
