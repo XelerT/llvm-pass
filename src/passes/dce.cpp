@@ -12,9 +12,9 @@
 namespace my_llvm
 {
 
-bool delete_instruction (llvm::Instruction       *instr, 
-                std::set<llvm::Instruction*>     &next2delete, 
-                         llvm::TargetLibraryInfo &info)
+bool dce_pass_t::delete_instruction 
+(llvm::Instruction *instr, std::set<llvm::Instruction*> &next2delete, 
+ llvm::TargetLibraryInfo &info)
 {
         if (llvm::isInstructionTriviallyDead(instr, &info)) {
                 unsigned char end_indx = instr->getNumOperands();
@@ -22,7 +22,7 @@ bool delete_instruction (llvm::Instruction       *instr,
                         llvm::Value *operand = instr->getOperand(i);
                         instr->setOperand(i, nullptr);
                         
-                        if (!operand->use_empty() || instr == operand) // check if we need to delete something connected
+                        if (!operand->use_empty() || instr == operand) // check if we need to delete uses
                                 continue;
                 
                         if (auto operand_instr = llvm::dyn_cast<llvm::Instruction>(operand)) // add dead instructions to delete them further
@@ -35,7 +35,7 @@ bool delete_instruction (llvm::Instruction       *instr,
         return false;
 } 
 
-bool elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
+bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
 {
         bool changed = false;
         std::set<llvm::Instruction*> next2delete;
