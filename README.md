@@ -11,8 +11,8 @@ This is the third task at Sber Compilers additional semester class: Implementati
 - LLVM
 
 ### Install & Build
-        $ git clone https://github.com/XelerT/Sber-LLVM.git
-        $ cd Sber-LLVM/
+        $ git clone https://github.com/XelerT/llvm-pass.git
+        $ cd llvm-pass/
         $ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
 
 ### Run

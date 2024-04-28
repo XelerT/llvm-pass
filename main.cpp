@@ -14,13 +14,20 @@ int main (int argc, const char** argv)
 {
         if (argc < 2)
         {
-                llvm::errs() << "No IR file to optimize!" << "\n";
+                llvm::errs() << "No IR file to optimize." << "\n";
                 return -1;
         }
 
         std::string ifile_path {argv[1]};
 
-        auto ir_src = read_file(ifile_path);
+        std::string ir_src {};
+        try
+        {
+                ir_src = read_file(ifile_path);
+        } catch (std::runtime_error &re) {
+                llvm::errs() << re.what() << "\n";
+                return -1;
+        }
 
         llvm::LLVMContext ctx;
         llvm::SMDiagnostic Err;
