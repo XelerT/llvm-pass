@@ -4,13 +4,6 @@
 
 #include "llvm/Analysis/Passes.h"
 #include "llvm/AsmParser/Parser.h"
-#include "llvm/Bitcode/BitcodeWriter.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/Support/SourceMgr.h"
 #include "llvm/Transforms/Utils/Mem2Reg.h"
 
 #include "ai_passes.hpp"
@@ -51,4 +44,3 @@ int main (int argc, const char** argv)
 
         return 0;
 }
-
