@@ -18,45 +18,30 @@
 namespace my_llvm
 {
 
-// bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
-// {
-//         bool changed = false;
-//         std::vector<llvm::Instruction*> next2delete;
+#ifdef DCE_NO_MARK_AND_SWEEP
 
-//         for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func))) {
-//                 if (!instr.hasNoInfs())
-//                         changed |= delete_instruction(&instr, std::back_inserter(next2delete), info);
-//         }
+bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
+{
+        bool changed = false;
+        std::vector<llvm::Instruction*> next2delete;
 
-//         while (!next2delete.empty()) {
-//                 auto instr = next2delete.back();
-//                 next2delete.pop_back();
-//                 changed |= delete_instruction(instr, std::back_inserter(next2delete), info);
-//         }
+        for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func))) {
+                if (!instr.hasNoInfs())
+                        changed |= delete_instruction(&instr, std::back_inserter(next2delete), info);
+        }
 
-//         return changed;
-// }
+        while (!next2delete.empty()) {
+                auto instr = next2delete.back();
+                next2delete.pop_back();
+                changed |= delete_instruction(instr, std::back_inserter(next2delete), info);
+        }
 
-// bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
-// {
-//         bool changed = false;
-//         std::vector<llvm::Instruction*> next2delete;
+        return changed;
+}
 
-//         for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func))) {
-//                 if (!instr.hasNoInfs())
-//                         changed |= delete_instruction(&instr, std::back_inserter(next2delete), info);
-//         }
+#endif /* DCE_NO_MARK_AND_SWEEP */
 
-//         while (!next2delete.empty()) {
-//                 auto instr = next2delete.back();
-//                 next2delete.pop_back();
-//                 changed |= delete_instruction(instr, std::back_inserter(next2delete), info);
-//         }
-
-//         return changed;
-// }
-
-bool is_jump (llvm::Instruction *instr)
+bool dce_pass_t::is_jump (llvm::Instruction *instr)
 {
         llvm::Instruction *dyn_instr = llvm::dyn_cast<llvm::ReturnInst>(instr);
         if (!dyn_instr)
@@ -69,25 +54,23 @@ bool is_jump (llvm::Instruction *instr)
         return dyn_instr;
 }
 
-bool sweep (llvm::Function &func, llvm::TargetLibraryInfo &info)
+bool dce_pass_t::sweep (llvm::Function &func, llvm::TargetLibraryInfo &info)
 {
         bool changed = false;
 
-        for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func))) {
-                std::cout << "instrs??\n";
-                if (instr.hasNoInfs()) {
+        for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func)))
+                if (instr.hasNoInfs())
                         if (!is_jump(&instr)) {
-                                llvm::errs() << instr << "must be dead\n";
                                 instr.eraseFromParent();
                                 changed |= true;
                         }
-                }
-        }
 
         return changed;
 }
 
-std::vector<llvm::BasicBlock*> get_rev_dom_frontier (llvm::Function &func, llvm::BasicBlock *basic_block) 
+std::vector<llvm::BasicBlock*> 
+dce_pass_t::get_rev_dom_frontier 
+(llvm::Function &func, llvm::BasicBlock *basic_block) 
 {
         std::vector<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> work_list;
         llvm::DominatorTree dom_tree(*basic_block->getParent());
@@ -134,56 +117,31 @@ std::vector<llvm::BasicBlock*> get_rev_dom_frontier (llvm::Function &func, llvm:
         return rdf;
 }
 
-std::vector<llvm::BasicBlock*> get_dominators (llvm::BasicBlock *basic_block) 
-{
-        std::vector<llvm::BasicBlock*> ret;
-        llvm::DominatorTree dom_tree(*basic_block->getParent());
-        llvm::DomTreeNode *node = dom_tree.getNode(basic_block);
-
-        if (!node)
-                return ret;
-        
-        node = node->getIDom();
-        while (node && node->getBlock()) {
-                ret.push_back(node->getBlock());
-                node = node->getIDom();
-        }
-
-        return ret;
-}
-
 bool dce_pass_t::elim_dead_code (llvm::Function &func, llvm::TargetLibraryInfo &info)
 {
         std::vector<llvm::Instruction*> next2delete;
 
         for (llvm::Instruction &instr : llvm::make_early_inc_range(llvm::instructions(func))) {
                 if (!llvm::wouldInstructionBeTriviallyDead(&instr, &info)) {
-                        llvm::errs() << "would not be dead " << instr.isTerminator() << instr << instr.hasNoInfs() << "\n";
                         instr.setHasNoInfs(false);
                         next2delete.push_back(&instr);
                 } else {
                         instr.setHasNoInfs(true);
-                        llvm::errs() << "would be dead " << instr << instr.hasNoInfs() << "\n";
                 }
         }
 
         while (!next2delete.empty()) {
                 auto instr = next2delete.back();
                 next2delete.pop_back();
-                std::cout << "not empty\n";
                 for (auto& oper : instr->operands()) {
-                        std::cout << "opers\n";
                         auto *operand_insrt = llvm::dyn_cast<llvm::Instruction>(oper);
-                        llvm::errs() << *oper << "\n"; 
                         if (operand_insrt && operand_insrt->hasNoInfs()) {
-                                llvm::errs () << " operand is useful" << instr;
                                 operand_insrt->setHasNoInfs(false);
                                 next2delete.push_back(operand_insrt);
                         }
                 }
 
                 for (auto& block : get_rev_dom_frontier(func, instr->getParent())) {
-                        std::cout << "block\n";
                         auto& rev_dom_instr = block->back();
                         rev_dom_instr.setHasNoInfs(false);
                         next2delete.push_back(&rev_dom_instr);

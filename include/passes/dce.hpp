@@ -19,6 +19,13 @@ class dce_pass_t : public llvm::PassInfoMixin<dce_pass_t>
 
                 bool elim_dead_code 
                 (llvm::Function &func, llvm::TargetLibraryInfo &info);
+
+                std::vector<llvm::BasicBlock*> 
+                get_rev_dom_frontier 
+                (llvm::Function &func, llvm::BasicBlock *basic_block);
+
+                bool sweep (llvm::Function &func, llvm::TargetLibraryInfo &info); 
+                bool is_jump (llvm::Instruction *instr);
 };
 
 template <typename Container>
