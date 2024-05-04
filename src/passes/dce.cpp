@@ -12,6 +12,7 @@
 #include "llvm/IR/Dominators.h"
 #include "llvm/Support/GenericDomTree.h"
 #include "llvm/Analysis/PostDominators.h"
+#include "llvm/ADT/DenseMap.h"
 
 #include "dce.hpp"
 
@@ -78,7 +79,7 @@ dce_pass_t::get_rev_dom_frontier
 
         std::vector<llvm::BasicBlock*> rdf {};        
 
-        std::unordered_map<llvm::BasicBlock*, llvm::BasicBlock*> visited {};
+        llvm::DenseMap<llvm::BasicBlock*, llvm::BasicBlock*> visited {};
 
         work_list.push_back({basic_block, nullptr});
         while (work_list.size()) {
